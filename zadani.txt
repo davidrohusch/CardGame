@@ -1,0 +1,55 @@
+Karetní RPG
+
+
+Naprogramujte engine pro hraní karetního RPG
+
+Váš engine:
+
+    ze souboru nahraje definici karet (jejich typ, atributy, efekty), balíčku (seznam karet v balíčku)
+    umožní vytvořit a hrát samotnou karetní hru
+    implementuje variantu pro jednoho hráče proti počítači (náhodné tahy nestačí)
+    implementuje variantu pro dva hráče (výměna přes potvrzovací okno, aby soupeř neviděl karty, nebo naopak soupeři si celou dobu do karet vidí)
+    umožňuje ukládat a načítat rozehrané hry
+
+Kde lze využít polymorfismus? (doporučené)
+
+    Typy karet: útočné, obranné, speciální, ...
+    Efekty akcí: síla útoku, síla obrany, vem si X karet, zahoď X karet
+    Ovládání hráče: lokální hráč, umělá inteligence (různé druhy), síťový hráč
+    Uživatelské rozhraní: konzole, ncurses, SDL, OpenGL (různé varianty),
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+Můj předběžný popis hry:
+
+Každý hráč bude mít v ruce sadu karet a 1 svého rytíře. Oba hráči budou používat svého rytíře k boji mezi sebou.
+Hráč, který nepříteli zničí rytíře, tak vyhraje. Rytíř bude mít ve výbavě artefakty, které získá od hraní karet. Manu, zlaťáky, životy a sílu útoku.
+
+Hráči se střídají každé kolo. Během kola může hráč udělat následující (tyto činnosti ukončí kolo):
+Aktivovat kartu (Karta bude mít různé typy: artefakt a kouzlo).
+Líznout si kartu
+Jít do dungeonu => Náhodný event (Například encounter s monstrem, nalezení artefaktu, nalezení tajných objektů. Hráč bude mít možnost se rozhodnout)
+Zaútočit na nepřítele a vzít mu životy podle síly útoku (odvyjí se od artefaktů).
+
+Následně bude hráč mít možnost z této nabídky možností, které kolo neukončí:
+Uložit hru.
+Ukončit hru.
+podívat se na stav nepřítele (Uvidět jeho statistiky)
+
+Počítačový protivník bude počítat svůj tah pomocí hodnoty.
+1) nejdřív se podívá na všechny karty v ruce.
+2) pokud nemůže žádnou zahrát a bude mít v ruce málo karet (pod polovinu. tudiž pod 3 karty), jinak půjde do dungeonu.
+3) Počítač se bude snažit hrát nejlepší karty v ruce. Podle statů karty se sečte jeho hodnota, a karta s nejlepší valuu se použije.
+4) pokud karta bude slabá, a bude mít málo karet v ruce, tak se použije random 50% jestli ji zahrát, nebo jít do dungeonu.
+
+Polymorfismus vidím v následujících věcec:
+    -Jsou tu 2 typy karet. Artefakt a kouzlo. Každý z nich v ceně bere něco jiného. Artefakt stojí zlaťáky, kouzlo stojí manu. Nad nima bude abstraktní classa CCard
+    Tyto karty budou ukládaný do vectoru pomocí shared_pointeru. Balíček karet bude obsahovat pouze třídu CCard, a bude potřeba tyto dva typy karet od sebe odlišovat.
+    -Soupeř ovládaný počítačem. Tento objekt bude mít veškeré rozhraní CPlayer, ale bude mít navíc výpočty tahu. Třída hráče bude mít všechny informace o hráči včetně karet,
+    které má v ruce. Tato třída bude mít také všechny metody, které dovolí líznout si kartu, zahrát kartu, nebo jít do dungeonu. Počítač bude tyto classy přebírat a někdy někde i možná upravené,
+    aby právě mohl vypočítat nejlepší daný tah.
+
+
+
+Rozdíli mezi mým předběžným popisem a mezi výslednou prací:
+
