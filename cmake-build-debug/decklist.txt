@@ -1,6 +1,0 @@
-#komentar
-#ID   mnozstvi . @N  karty s ID (počínaje od ID=0), ktere nejsou na tomto seznamu, tak se do balicku pridaji automaticky v kvantitě N.
-@1
-#   ID      QUANTITY
-	1 1
-	2	5
