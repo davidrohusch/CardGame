@@ -1,0 +1,3 @@
+/mnt/e/skola/predmety/old/2. semestr/BI-PA2/semestralka/rohusdav/semestral/rohusdav/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/mnt/e/skola/predmety/old/2. semestr/BI-PA2/semestralka/rohusdav/semestral/rohusdav/cmake-build-debug/CMakeFiles/Semestralka.dir
+/mnt/e/skola/predmety/old/2. semestr/BI-PA2/semestralka/rohusdav/semestral/rohusdav/cmake-build-debug/CMakeFiles/edit_cache.dir

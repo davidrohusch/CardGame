@@ -53,3 +53,13 @@ Polymorfismus vidím v následujících věcec:
 
 Rozdíli mezi mým předběžným popisem a mezi výslednou prací:
 
+Nakonec jsem neimplementoval prohlídnutí stavu nepřítele. Nepovažoval jsem to za důležitý.
+Model počítačového protivníka jsem udělal na podobným principu, který jsem popsal v předběžném popisu.
+Návrhu hry jsem se úspěšně držel až ke konci.
+
+Polymorfismus se nachází u hráče. Hráč může být buď člověk, počítač, či expertní počítač. Tyto classy sdílí virtualní metodu playing, kde každá classa má jiný princip  toho, co playing metoda dělá.
+Člověk u playing má UI s možností vybrat volbu svého tahu.
+Počítač vypočítává svůj následující tah.
+Expertní počítač ho vypočítává trochu záludněji.
+
+Tento polymorfismus mi dovoluje založit hru s jakýmkoliv počtem hráčů, a jakéhokoliv druhu. Díky tomu, že hráč obsahuje u sebe i pointer na nepřítele, tak je možné dělat kruhové hry typu 1 vs 1 vs 1. 

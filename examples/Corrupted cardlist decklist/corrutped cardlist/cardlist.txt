@@ -1,0 +1,15 @@
+# komentar
+# druh karet: 1) artefakt, 2) kouzlo.
+# ID karet je automaticky. Prvni karta ID=1 , a následně ID++
+# artefakty se plati zlatakama, kouzla manou
+# Nazev karty               druh karty      cena        hpself    atkself      hpenemy    atkenemy            textovy popis karty
+#
+"Zlodejsky vysavac             6             5            1         1           -1          -1               "Vysaj zivotni silu nepritele "
+"Plastova vidlicka"             1             4            0         1            0           0               "Nicivy nastroj domaci kuchyne"
+"Dvoustrany Nuzky"              2             3            -1        0           -1           0               "Hod po nepriteli nuzky. Bohuzel se spatne drzi, takze se zranis taky"
+"Klarinet"                      1             3            0         1            0           0               "Tvuj hudebni talent zpusobuje kriticke zraneni nepriteli."
+"Plešové oslepení"              2             2            0         0           -1                 "Sundej si přilbu a oslep svého nepřítele svoji krásnou pleší."
+"Redbull"                       1             3            3         1            0           0               "Redbull dává křídla."
+"Progtest uloha"                2             10           0         0           -5          -1               "Ultimatni zbran, ktera vycerpa vsechny zivotni sili nepritele."
+"Papirova prilba"               1             1            2         0            0           0               "Jednoduchy a ucinny brneni."
+"F"                             2             30           0         0           -20          0               "Legendarni zaklinadlo, ktereho se boji kazdy student. Vyslov ho a znic nepritele."

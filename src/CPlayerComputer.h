@@ -12,15 +12,16 @@
     */
 
 
-class CPlayerComputer : public CPlayer{
-private:
-    int countPlayableCards () const ;
+class CPlayerComputer : public CPlayer {
+protected:
+    int countPlayableCards() const;
+
+    void goToDungeon(WINDOW *w, CGame *pGame);                        /// Gives randomly : 'new card to the hand' OR 'Applies effects on player' OR  'Gives random amount of gold'
 public:
     CPlayerComputer(int hp, int mana, int gold, int attack);
 
 
+    virtual string whatAmI() const;                              /// returns string "PC"
 
-     string whatAmI ( ) const;                              /// returns string "PC"
-     void goToDungeon(CGame *pGame);                        /// Gives randomly : 'new card to the hand' OR 'Applies effects on player' OR  'Gives random amount of gold'
-     void playing(CGame *game);                             /// The same as CPlayerHuman, but controlled by it's own value checker.
+    virtual void playing(CGame *pGame);                             /// The same as CPlayerHuman, but controlled by it's own value checker.
 };

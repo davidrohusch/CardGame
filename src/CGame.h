@@ -1,13 +1,14 @@
 #pragma once
 
-
-
 #include <string>
 #include "CDeck.h"
 #include "CPlayer.h"
-
+#include "CSaveSystem.h"
 
 using namespace std;
+
+
+class CPlayer;
 
 /** @brief Class used to maintain the main game logic.
 
@@ -20,54 +21,103 @@ using namespace std;
     @date June 2021
     */
 
-
-class CPlayer;
-
 class CGame {
-private:
-    int hpMax, manaMax, startGold, startAttack;
+protected:
+    CSaveSystem saveHandler;                   /*!< Save/Load hadnler */
+    CDeck deck;                                /*!< Database of cards and deck */
+    shared_ptr<CPlayer> playerOne, playerTwo;  /*!< Two players */
 
-    shared_ptr<CPlayer> playerOne, playerTwo; /// Creates 2 players
-    bool isRunning;                           /// Returns if the game is still running
-    bool inMenu;                              /// Returns if the game is inside of the menu
-    CDeck deck;                               /// List of all cards and deck
-    unsigned int round;                       /// Let's you know whose turn it is now
+    int hpMax, manaMax, startGold, startAttack;/*!< Stats */
+    unsigned int round;                        /*!< Round number */
 
+    bool isRunning;                           /*!< Boolean if the game is running  */
+    bool inMenu;                              /*!< Boolean if the game is in menu  */
 
-    bool loadGame();      /// Loads the game from savefiles
-
-    void newGame();       /// Starts a new game with player vs player
-
-    void newGamePC();     /// Starts a new game with player vs computer
-
-
-    bool saveSettings();  /// Saves whose round it is now inside of a file
-
-    bool saveCards();     /// Saves all cards inside a file
-
-    bool savePlayers();   /// Saves information about a player into a file
-
+    //! Starts a new game
+    /*!
+      \sa CPlayer
+      \pram A
+      \pram B
+      \return void
+    */
+    void newGame(shared_ptr<CPlayer> &A, shared_ptr<CPlayer> &B);       ///
+    //! Checks if playerOne or playerTwo are death
+    /*!
+      \sa CPlayer
+      \return Returns true if one of the players have won
+    */
+    bool winCheck();
+    //! Ends the game
+    /*!
+      \return void
+    */
+    void endGame();
 public:
-    bool saveGame();      /// Saves everything
-
     CGame(int hpMax, int manaMax, int startGold, int startAttack);
-
-    void step();          /// Game-step
-
-    void endGame();       /// Ends the game
-
-    bool running() const; /// Returns if the game is still running
-
-    void load();          /// Load cards inside the deck
-
-    bool menu();          /// Pre-game menu
-
-    bool giveCard(const shared_ptr<CPlayer> &src, const shared_ptr<CCard> &card);  /// Gives a src player a card
-
-    bool drawCard(const shared_ptr<CPlayer> &src);                                 /// Draw a card from the top of the deck to player's hand
-
-    shared_ptr<CCard> randomCard();                /// Returns random card from the list of cards
-
+    //! Saves the game
+    /*!
+      \return void
+    */
+    void saveGame() const;
+    //! Returns if the game is running
+    /*!
+      \return Returns if the game is running
+    */
+    bool running() const;
+    //! Main Menu handler.
+    /*!
+      \return Returns false if menu is supposed to end
+    */
+    bool menu();           /// Pre-game menu
+    //! Gives card to player
+    /*!
+      \sa CCard
+      \sa CPlayer
+      \pram src Player
+      \pram card Card
+      \return Returns true if it succeeds
+    */
+    bool giveCard(const shared_ptr<CPlayer> &src, const shared_ptr<CCard> &card);
+    //! Draws a card from top of the deck and gives it to player
+    /*!
+      \sa CCard
+      \sa CPlayer
+      \pram src Player
+      \return returns true if it succeeds
+    */
+    bool drawCard(const shared_ptr<CPlayer> &src);
+    //! Main game logic loop handler
+    /*!
+      \return void
+    */
+    void step();
+    //! Loads cards and the deck
+    /*!
+      \sa CCard
+      \sa CDeck
+      \return void
+    */
+    void load();
+    //! Draw a card from top of the deck and pushes it into hand
+    /*!
+      \sa CCard
+      \sa CPlayer
+      \pram src vector of cards in hand
+      \return void
+    */
     void drawCard(vector<shared_ptr<CCard>> &src); /// Gives player a card from the top of the deck.
+    //! sets game status
+    /*!
+      \pram menu
+      \pram run
+      \return void
+    */
+    void setStatus(bool menu, bool run);
+    //! Gives random card from card database
+    /*!
+      \sa CCard
+      \return Returns random card from card database
+    */
+    shared_ptr<CCard> randomCard();
 };
 

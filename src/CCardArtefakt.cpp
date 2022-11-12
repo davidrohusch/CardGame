@@ -10,9 +10,9 @@ CCardArtefakt::CCardArtefakt(const string &name, const string &desc, const SEffe
 }
 
 
-
-ostream &CCardArtefakt::printCard(ostream &os) {
-    os << "\"" << name << "\"" << " " << 1 << " " << effect.price << " " << effect.hpSelf << " " << effect.dmgSelf << " "<< effect.hpEnemy << " "<< effect.dmgEnemy << " " << "\"" << desc << "\"" << endl ;
+ostream &CCardArtefakt::printCard(ostream &os) const {
+    os << "\"" << name << "\"" << " " << 1 << " " << effect.price << " " << effect.hpSelf << " " << effect.dmgSelf
+       << " " << effect.hpEnemy << " " << effect.dmgEnemy << " " << "\"" << desc << "\"" << endl;
     return os;
 }
 
@@ -21,6 +21,10 @@ bool CCardArtefakt::canBePlayed(int mana, int gold) const {
 }
 
 void CCardArtefakt::payPrice(int &mana, int &gold) {
-    gold -= effect.price ;
+    gold -= effect.price;
+}
+
+string CCardArtefakt::price() const {
+    return "Gold";
 }
 

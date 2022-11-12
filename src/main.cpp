@@ -9,8 +9,11 @@ using namespace std;
 
 
 int main(){
+    initscr();
+    clear();
+    noecho();
 
-    CGame game(100, 10, 10, 5);
+    CGame game(30   , 10, 10, 5);
 
     game.load();
 
@@ -21,12 +24,7 @@ int main(){
         game.step();
     }
 
-    game.endGame();
-
-
-
-
-
+    endwin();
 
     return 0;
 }

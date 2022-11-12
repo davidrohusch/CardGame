@@ -11,7 +11,7 @@ CCardSpell::CCardSpell(const string &name, const string &desc, const SEffect &ef
 
 
 
-ostream &CCardSpell::printCard(ostream &os) {
+ostream &CCardSpell::printCard(ostream &os) const {
     os << "\"" << name << "\"" << " " << 2 << " " << effect.price << " " << effect.hpSelf << " " << effect.dmgSelf << " "<< effect.hpEnemy << " "<< effect.dmgEnemy << " " << "\"" << desc << "\"" << endl ;
     return os;
 }
@@ -22,5 +22,9 @@ bool CCardSpell::canBePlayed(int mana, int gold) const {
 
 void CCardSpell::payPrice(int &mana, int &gold) {
     mana -= effect.price ;
+}
+
+string CCardSpell::price() const {
+    return "Mana";
 }
 

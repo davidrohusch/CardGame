@@ -20,13 +20,11 @@ ostream &operator<<(ostream &os, CCard &src) {
     return src.printCard(os);
 }
 
-ostream &CCard::printCard(ostream &os) {
-    return  os;
-}
 
 const int &CCard::getID() const {
     return effect.ID;
 }
+
 
 const SEffect &CCard::getEffect() const {
     return effect;

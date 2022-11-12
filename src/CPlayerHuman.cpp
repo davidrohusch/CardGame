@@ -3,7 +3,7 @@
 #include <ctime>        // std::time
 #include <cstdlib>      // std::rand, std::srand
 #include <string>
-
+#include "Graphics.h"
 
 CPlayerHuman::CPlayerHuman(int hp, int mana, int gold, int attack) : CPlayer(hp, mana, gold, attack) {
 }
@@ -12,7 +12,7 @@ string CPlayerHuman::whatAmI() const {
     return "HUMAN";
 }
 
-void CPlayerHuman::goToDungeon(CGame *pGame) {
+void CPlayerHuman::goToDungeon(WINDOW *w, CGame *pGame) {
     srand(time(0));
     int goldgain = rand() % 10 + 1;
     int buffgain = rand() % 3 + 1;
@@ -27,26 +27,28 @@ void CPlayerHuman::goToDungeon(CGame *pGame) {
             ///random card
 
             if(addCard( randCard)) {
-                dialog = "Nalezl jsi tuto vecicku pod kamenem : " + randCard->getName();
-                printDialog(dialog);
+                dialog = "You found this thingie underground : " + randCard->getName();
+                printBox(w, dialog,25,0);
+
             }else{
-                dialog = "Nalezl jsi tuto vecicku pod kamenem : " + randCard->getName() + ". Ale tve kapsy jsou prilis plne!";
-                printDialog(dialog);
+                dialog = "You found this thingie underground : " + randCard->getName() + ". But your pockets are full.";
+                printBox(w, dialog,25,0);
+
             }
             break;
 
         case(1):
 
             applyEffect(0,0,goldgain,0);
-            dialog = "Narazil jsi na trolla, ktery vytrousil  : " + to_string(goldgain) + " zlataku.";
-            printDialog(dialog);
+            dialog = "You found a troll. He dropped : " + to_string(goldgain) + " goldcoins on the ground.";
+            printBox(w, dialog,25,0);
             ///random gold
             break;
         case(2):
 
             applyEffect(buffgain,buffgain,0,0);
-            dialog = "objevil jsi svatyni, po napiti se ze dzbanu si pripadas silnejsi." ;
-            printDialog(dialog);
+            dialog = "You found a shrine. You feel stronger now." ;
+            printBox(w, dialog,25,0);
             ///random buff
             break;
     }
@@ -54,109 +56,103 @@ void CPlayerHuman::goToDungeon(CGame *pGame) {
 
 }
 
-void CPlayerHuman::playing(CGame *game) {
+void CPlayerHuman::playing(CGame *pGame) {
     bool turn = true;
-    char ch;
-    mana+=2; //give player some mana
+    int ch;
+    mana += 2; //give player some mana
+    string dialog;
+    int highlight=1;
 
-    cout << "zivoty: " << hp << "  utok: " << attack << "  zlataky: " << gold << "  mana:  " << mana;
-    cout << "\n\n" << "Cislem vyber moznost, a nebo pismenem kartu" << endl;
+    WINDOW *w = newwin(30, 100, 0, 0);
 
-    char zn = 'a';
-    for(const auto &i : hand){
-        cout << zn << ") " << i->getName() << endl;
-        zn++;
-    }
-    cout << endl  << endl << "1) lizni kartu 2) Jdi do dungeonu 3) zautoc na nepritele 4) uloz hru 5) ukonci hru " << endl;
+    mvwprintw(w, 1, 2, "hp:%d   attack:%d    gold:%d     mana:%d\n  F1) Draw card    F2) Go to dungeon  F3) attack enemy   F4) save game   F5) exit", hp, attack, gold, mana);
+    drawCardMenu(w, highlight ,hand, gold, mana);
+    keypad(stdscr, TRUE);
+
+
+
     shared_ptr<CPlayer> spFoo = enemyPlayer.lock();
+    refresh();
+    while(turn) {
+        drawCardMenu(w, highlight ,hand, gold, mana);
 
-    while(turn){
+        ch = getch();
 
-
-        cin >> ch;
-
-       switch(ch){
-           case '1':
-               if(cardMax > hand.size()){
-                   game->drawCard( hand );
-                   printDialog("Liznul sis kartu, konec kola!");
-                   turn = false;
-               }else{
-                   printDialog("Neudrzis tolik karet v ruce najednou");
-               }
-
-               break;
-           case '2':
-               goToDungeon(game);
-               turn = false;
-               break;
-           case '3':
-               attackPlayer(spFoo,attack);
-               printDialog("Zpusobil jsi nepriteli : " + to_string(attack) + " poskozeni, a tim skoncil tvuj tah.");
-               turn = false;
-              break;
-           case '4':
-                if (game->saveGame())
-                printDialog("Ulozeno");
-                else{
-                    printDialog("Zli carodejove ti zamitli ulozeni hry! (Nastala chyba pri ukladani)");
+        switch (ch) {
+            case 10:
+                try{
+                    hand.at(highlight-1);
+                }catch(std::out_of_range){
+                    break;
                 }
-               break;
-           case '5':
-               game->endGame();
-               turn = false;
-               break;
+                if(hand[highlight-1]->canBePlayed(mana, gold)) {
+                    playCard(highlight-1);
+                    hand.erase(hand.begin() + highlight-1);
+                    turn = false;
+                }
 
-       }
+                break;
+            case KEY_UP:
+                highlight--;
+                if(highlight<1) highlight = hand.size();
 
-        if(ch >= 'a' && ch<='z'){
-            if (showCardInfo(hand[ch - 'a'], (ch - 'a'))) {
+                break;
+
+            case KEY_DOWN:
+                highlight++;
+                if(highlight>hand.size()) highlight=1;
+
+                break;
+
+            case KEY_F(1):
+                if (cardMax > hand.size()) {
+                    try {
+                        pGame->drawCard(hand);
+                    }
+                    catch (string &e) {
+                        turn = false;
+                        pGame->setStatus(false, false);
+                        return;
+                    }
+
+                    printBox(w, "You drew a card. End of your turn!",25,0);
+                    getch();
+                    //clear();
+                    turn = false;
+                } else {
+                    printBox(w, "You can not handle so manny cards",25,0);
+                }
+
+                break;
+            case KEY_F(2):
+                goToDungeon(w, pGame);
                 turn = false;
-            };
-        }
+                break;
+            case KEY_F(3):
+                attackPlayer(enemyPlayer.lock(), attack);
 
-    }
-}
+                printBox(w, "You attacked enemy with : " + to_string(attack) + " attack, now you need to rest for a round.",25,0);
+                turn = false;
+                break;
+            case KEY_F(4):
 
-void CPlayerHuman::printDialog(const string &dialog) const {
-    cout << dialog << endl;
-}
+                dialog = "SAVED SUCCESFULLY";
+                try {
+                    pGame->saveGame();
+                }
+                catch (...) {
+                    dialog = "Evil witchers denied your will to save the game! (Saving failed)";
+                }
+                printBox(w, dialog,25,0);
+                break;
+            case KEY_F(5):
+                pGame->setStatus(false, false);
+                turn = false;
+                break;
 
-bool CPlayerHuman::showCardInfo(shared_ptr<CCard> &card, int index) {
-    cout << "\n\n\n" << card->getName() << "\n" << card->getDesc() << "\n\n";
-    cout << "Cena : " << card->getEffect().price << "Zvyseni zdravi o : " << card->getEffect().hpSelf
-         << " Zvyseni poskozeni o : " << card->getEffect().dmgSelf << endl
-         << "Snizeni zdravi nepritele o : " << card->getEffect().hpEnemy << " Snizeni utoku nepritele o : "
-         << card->getEffect().dmgEnemy << endl;
-
-    cout << "Pro zahrati napis 1, zpatky do menu 2" << endl;
-
-
-    while (1) {
-        int ch = 0;
-        cin >> ch;
-
-        if(ch==1){
-            if(card->canBePlayed(mana, gold)) {
-
-                cout << "Zahral jsi " << hand[index]->getName() << " a zpusobil jsi tim: " << endl
-                     << "Zvyseni svych zivotu o " << to_string(hand[index]->getEffect().hpSelf) << " bodu."
-                     << "Zvyseni sve sily o " << to_string(hand[index]->getEffect().dmgSelf) << " bodu."
-                     << "Snizeni nepritolovo zdravi o  " << to_string(hand[index]->getEffect().hpEnemy) << " bodu."
-                     << "Snizeni nepratelskeho utoku o " << to_string(hand[index]->getEffect().dmgEnemy) << " bodu.";
-                cout << endl;
-                playCard(index);
-                hand.erase(hand.begin() + index);
-                return true;
-            }else{
-                cout << "Nedostatek zdroju" << endl;
-
-            }
-        }
-        if(ch==2){
-            return false;
         }
     }
+
 }
 
 

@@ -9,18 +9,12 @@
 #include <ctime>
 
 
-bool CDeck::loadDeck(const string &filename){
-
-
+void CDeck::loadDeck(const string &filename){
+    if(cardList.empty()) throw "";
     int Q = 0;
     string line;
     ifstream deckListFile;
-
-    if(filename=="")
-         deckListFile.open("decklist.txt");
-    else
-        deckListFile.open(filename);
-
+    deckListFile.open(filename);
 
     if (deckListFile.is_open()) {
         set<int> tmp;
@@ -30,7 +24,7 @@ bool CDeck::loadDeck(const string &filename){
             if (line[0] == '#') continue;
             if (line[0] == '@') {
                 Q = line[1] - '0';
-                if (Q < 0) return false;
+                if (Q < 0 || Q >= 10) throw "";
                 continue;
             }
             int ID, n;
@@ -38,9 +32,8 @@ bool CDeck::loadDeck(const string &filename){
             ss.clear();
             ss << line;
             ss >> ID >> n;
+            if(ID<0 || ID>cardList.size() || n<0 || ss.fail()) throw "";
 
-
-            if (ss.fail()) return false;
             tmp.insert(ID);
 
             for (int i = 0; i < n; i++) {
@@ -55,24 +48,23 @@ bool CDeck::loadDeck(const string &filename){
             for (int k = 0; k < Q; k++) {
                 deck.push_back(cardList[i]);
             }
-
         }
+    }
+    else
+        throw "";
 
-
-    } else return false;
     srand(std::time(0));
     random_shuffle(deck.begin(), deck.end());
     deckListFile.close();
-    return true;
+    if(deck.empty()) throw "";
+
+    return;
 }
 
-bool CDeck::loadCards(const string &filename) {
+void CDeck::loadCards(const string &filename) {
     ifstream cardListFile;
 
-    if(filename==""){
-         cardListFile.open("cardlist.txt");}
-    else
-         cardListFile.open(filename);
+    cardListFile.open(filename);
 
     string line;
 
@@ -86,10 +78,10 @@ bool CDeck::loadCards(const string &filename) {
             SEffect effect{};
             string desc;
 
-            if (line[0]=='\r'  || line[0] == '\n') continue;
+            if (line[0] == '\r'  || line[0] == '\n') continue;
             if (line[0] == '#') continue;                    /// # symbol is for comment.
             if (line[0] != '"') {                            /// Line is supposed to start with # or "
-                return false;
+                throw "";
             }
             int tmp = 0;
             for (size_t i = 1; i < line.length(); i++) {     /// " pairing
@@ -104,14 +96,24 @@ bool CDeck::loadCards(const string &filename) {
             ss << line.substr(tmp + 1, line.length());
             ss >> cardType >> effect.price >> effect.hpSelf >> effect.dmgSelf >> effect.hpEnemy >> effect.dmgEnemy;
 
-            if (ss.fail()) {
-                //print error
-                return false;
+            if (ss.fail() || cardType<=0 || cardType >=3) {
+                throw "";
             }
 
             ss >> ws;
             getline(ss, desc);
-            desc = desc.substr(1, desc.size() - 3);
+
+            tmp=-1;
+            if(desc[0]!='\"') throw "";
+            for(int i = 1 ; i < desc.size() ; i++){
+                if(desc[i] == '\"'){
+                    tmp = i;
+                    break;
+                }
+            }
+            if(tmp==-1) throw "";
+
+            desc = desc.substr(1, tmp-1);
             effect.ID = tempID;
             effect.cardValue = effect.hpSelf + effect.dmgSelf - effect.hpEnemy - effect.dmgEnemy;
             if (cardType == 1) {
@@ -124,18 +126,19 @@ bool CDeck::loadCards(const string &filename) {
         }
 
         cardListFile.close();
-        if(loadDeck("")) return true;
-        else return false;
+        if(cardList.empty()) throw "";
+        return;
 
-    }else
-        return false;
+    }else{
+        throw "";
+    }
 }
 
 shared_ptr<CCard> CDeck::drawCard() {
 
 
   if(deck.empty()){
-      loadDeck("");
+      loadDeck("decklist.txt");
   };
 
   auto card = deck.back();
@@ -144,12 +147,11 @@ shared_ptr<CCard> CDeck::drawCard() {
   return card;
 }
 
-shared_ptr<CCard> CDeck::randomCard() {
-
+shared_ptr<CCard> CDeck::randomCard() const {
     return cardList[ ( rand() % cardList.size() )];
 }
 
-bool CDeck::saveCardsToFile(const string &filename) {
+void CDeck::saveCardsToFile(const string &filename) const {
     ofstream save;
     save.open(filename);
     if(save.is_open()){
@@ -159,14 +161,14 @@ bool CDeck::saveCardsToFile(const string &filename) {
 
     }else {
         save.close();
-        return false;
+        throw "";
     }
 
     save.close();
-return true;
+
 }
 
-bool CDeck::saveDeckToFile(const string &filename) {
+void CDeck::saveDeckToFile(const string &filename) const{
     ofstream save;
     save.open(filename);
     if(save.is_open()){
@@ -175,10 +177,10 @@ bool CDeck::saveDeckToFile(const string &filename) {
         }
     }else{
         save.close();
-        return false;
+        throw "";
     }
     save.close();
-    return true;
+
 }
 
 void CDeck::returnCard(shared_ptr<CCard> &src) {
@@ -190,13 +192,20 @@ void CDeck::clear() {
     deck.clear();
 }
 
-vector<shared_ptr<struct CCard>> &CDeck::getDeck() {
-    return deck;
-}
+
 
 bool CDeck::returnCard(int index) {
     if((size_t)index>cardList.size()) return false;
     deck.push_back(cardList[index]);
     return true;
+}
+
+
+int CDeck::cardListSize() const {
+    return cardList.size();
+}
+
+shared_ptr<CCard> CDeck::getCardByIndex(int index) const {
+    return cardList.at(index);
 }
 

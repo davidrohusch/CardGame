@@ -9,7 +9,7 @@ string CPlayerComputer::whatAmI() const {
     return "PC";
 }
 
-void CPlayerComputer::goToDungeon(CGame *pGame) {
+void CPlayerComputer::goToDungeon(WINDOW *w, CGame *pGame) {
 
     srand(time(0));
     int goldgain = rand() % 10 + 1;
@@ -34,34 +34,65 @@ void CPlayerComputer::goToDungeon(CGame *pGame) {
     }
 
 
-
-
 }
 
-void CPlayerComputer::playing(CGame *game) {
-    mana+=2; //give player some mana
+void CPlayerComputer::playing(CGame *pGame) {
+    mana += 2; //give player some mana
     int cnt = countPlayableCards();
-    if(cnt==0) {cout << "Nepritel si lizl kartu" << endl; game->drawCard(hand); return;}
-    if(cnt==1) {cout << "Nepritel zasel do dungeonu." << endl; goToDungeon(game); return; }
+    if (cnt == 1) {
+        printw("enemy drew a card");
+        refresh();
+        getch();
+        pGame->drawCard(hand);
+        return;
+    }
+    if (cnt == 0) {
+        printw("Enemy went to a dungeon");
+        refresh();
+        getch();
+        goToDungeon(nullptr, pGame);
+        return;
+    }
 
     int max = hand[0]->getEffect().cardValue;;
-    int index = 0;
-    for(unsigned int i = 0 ; i < hand.size() ; i++){
-        if( hand[i]->canBePlayed(mana, gold) )
-            if (hand[i]->getEffect().cardValue > max) {
-                max = hand[i]->getEffect().cardValue;
-                index = i;
-            }
-    }
-    cout << "Nepritel zahral " << hand[index]->getName() << " a zpusobil tim: " << endl
-    << "Narostly mu zivoty o " << to_string ( hand[index]->getEffect().hpSelf ) <<" bodu."
-    << "Narostla mu sila o " << to_string ( hand[index]->getEffect().dmgSelf ) <<" bodu."
-    << "Snizil ti zivoty o " <<to_string ( hand[index]->getEffect().hpEnemy )  <<" bodu."
-    << "Snizil ti silu o " << to_string ( hand[index]->getEffect().dmgEnemy ) << " bodu.";
+    int index = -1;
+
+
+    if (hp < 20)
+        for (unsigned int i = 0; i < hand.size(); i++) {
+            if (hand[i]->canBePlayed(mana, gold))
+                if (hand[i]->getEffect().cardValue > max) {
+                    max = hand[i]->getEffect().cardValue;
+                    index = i;
+                }
+        }
+    if (index == -1)
+        for (unsigned int i = 0; i < hand.size(); i++) {
+            if (hand[i]->canBePlayed(mana, gold))
+                if (hand[i]->getEffect().hpSelf > max) {
+                    max = hand[i]->getEffect().hpSelf;
+                    index = i;
+                }
+        }
+    if (index == -1) index = 0;
+
+    string text = "Enemy played " + hand[index]->getName() + " And it did:\n";
+    if (hand[index]->getEffect().hpSelf != 0)
+        text += "His life increased by " + to_string(hand[index]->getEffect().hpSelf) + "\n";
+    if (hand[index]->getEffect().dmgSelf != 0)
+        text += "His damage power increased by " + to_string(hand[index]->getEffect().dmgSelf) + "\n";
+    if (hand[index]->getEffect().hpEnemy != 0)
+        text += "Your life decreased by " + to_string(hand[index]->getEffect().hpEnemy) + "\n";
+    if (hand[index]->getEffect().dmgEnemy != 0)
+        text += "Your damage power decreased by " + to_string(hand[index]->getEffect().dmgEnemy) + "\n";
+
+    printw(text.c_str());
+    refresh();
+    getch();
+
 
     playCard(index);
     hand.erase(hand.begin() + index);
-    cout <<endl;
 
 }
 

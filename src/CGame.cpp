@@ -7,6 +7,8 @@
 #include "CPlayerHuman.h"
 #include <memory>
 #include <fstream>
+#include "CPlayerComputerExpert.h"
+#include "Graphics.h"
 
 
 using namespace std;
@@ -14,228 +16,172 @@ using namespace std;
 
 CGame::CGame(int hpMax, int manaMax, int startGold, int startAttack) : hpMax(hpMax), manaMax(manaMax),
                                                                        startGold(startGold), startAttack(startAttack) {
+
     isRunning = true;
     inMenu = true;
     round = 0;
 
 }
 
+
+
 bool CGame::menu() {
-    int selection = 0;
     if (!inMenu) return false;
 
-    cout << "Zadejte volbu:\n1)Zacit novou hru proti pocitaci\n2)Zacit novou hru proti hraci.\n3)Nahrat existujici hru\n4)ukoncit hru\n";
+    int highlight = 1;
+    int choice = 0;
+    int startx = (80 - 10) / 2;
+    int starty = (24 - 10) / 2;
+    int c;
 
-    cin >> selection;
+    WINDOW *menu_win = newwin(10, 40, starty, startx);
+    keypad(menu_win, TRUE);
+    refresh();
 
+    vector<string> choices;
+    choices.emplace_back("New Game against Expert computer");
+    choices.emplace_back("New Game against computer");
+    choices.emplace_back("New Game against human");
+    choices.emplace_back("Load game");
+    choices.emplace_back("Exit");
 
-    if (selection == 1) {
-        inMenu = false;
-        newGamePC();
+    print_menu(menu_win, highlight, choices);
+
+    while(1)
+    {
+        c = wgetch(menu_win);
+        switch(c)
+        {	case KEY_UP:
+                if(highlight == 1)
+                    highlight = choices.size();
+                else
+                    --highlight;
+                break;
+            case KEY_DOWN:
+                if(highlight == choices.size())
+                    highlight = 1;
+                else
+                    ++highlight;
+                break;
+            case 10:
+                choice = highlight;
+                break;
+            default:
+                refresh();
+                break;
+        }
+        print_menu(menu_win, highlight, choices);
+        if(choice != 0)
+            break;
     }
-    if (selection == 2) {
-        inMenu = false;
-        newGame();
-    }
 
-    if (selection == 3) {
-        inMenu = false;
-        if (!loadGame()) {
-            cout << "\n\n\n\n\n\n\n\nERROR LOADING FILE";
+    clear();
+
+    switch(choice){
+        case 1:
+            inMenu = false;
+            playerOne = make_shared<CPlayerHuman>(hpMax, manaMax, startGold, startAttack);
+            playerTwo = make_shared<CPlayerComputerExpert>(hpMax, manaMax, startGold, startAttack);
+            newGame(playerOne, playerTwo);
+            break;
+        case 2:
+            inMenu = false;
+            playerOne = make_shared<CPlayerHuman>(hpMax, manaMax, startGold, startAttack);
+            playerTwo = make_shared<CPlayerComputer>(hpMax, manaMax, startGold, startAttack);
+            newGame(playerOne, playerTwo);
+            break;
+        case 3:
+            inMenu = false;
+            playerOne = make_shared<CPlayerHuman>(hpMax, manaMax, startGold, startAttack);
+            playerTwo = make_shared<CPlayerHuman>(hpMax, manaMax, startGold, startAttack);
+            newGame(playerOne, playerTwo);
+            break;
+        case 4:
+            inMenu = false;
+
+            try{
+                saveHandler.loadGame(deck, playerOne, playerTwo, inMenu, isRunning, round);
+            }catch(...)
+            {
+                clear();
+                mvprintw(24, 0, "Error loading savefile.");
+                inMenu = true;
+                isRunning = false;
+            }
+            break;
+        case 5:
+            inMenu = false;
             endGame();
-        };
-    }
-
-    if (selection == 4) {
-        inMenu = false;
-        endGame();
+            break;
     }
 
     return true;
 }
 
+
+void CGame::step() {
+    int startx = (80 ) / 2;
+    int starty = (24 ) / 2;
+
+    WINDOW *w = newwin(4, 20, starty, startx);
+
+    keypad(w, TRUE);
+    refresh();
+
+    if (winCheck()) return;
+
+    if (!(round % 2)) {
+        printBox(w,"Player 1 - start");
+        refresh();
+        getch();
+        clear();
+        playerOne->playing(this);
+    }
+
+    if (winCheck()) return;
+
+    if (round % 2) {
+        printBox(w,"Player 2 - start");
+        refresh();
+        getch();
+        clear();
+        playerTwo->playing(this);
+    }
+
+    round++;
+
+}
+
+
 void CGame::load() {
-    if (!deck.loadCards("")) {
 
-        cout << "Error, soubory s kartama obsahuje chybu." << endl
-             << "Mozne chyby:\n-Soubor s kartama se nejmenuje cardlist.txt\n-Soubor s balickem se nejmenuje decklist.txt"
-             << endl << "-Soubory obsahují syntatickou chybu.\n";
+    try{
+      deck.loadCards("cardlist.txt");
 
+      deck.loadDeck ("decklist.txt");
+    }
+    catch (const char *e)
+    {
+        mvprintw(15, 30, "Error loading cardlist.txt and decklist.txt");
+        getch();
         endGame();
-        ///print error a ukončit hru
     }
 
 }
 
-void CGame::newGame() {
+void CGame::newGame(shared_ptr<CPlayer> &A , shared_ptr<CPlayer> &B) {
     round = 0;
-    playerOne = make_shared<CPlayerHuman>(hpMax, manaMax, startGold, startAttack);
-    playerTwo = make_shared<CPlayerHuman>(hpMax, manaMax, startGold, startAttack);
-    for (int i = 0; i < 4; i++) {
-        bool a = drawCard(playerOne);
-        bool b = drawCard(playerTwo);
-
-        if (!(a || b)) {
-            cout << "ERROR";
-            endGame();
-        }
-    }
-}
-
-void CGame::newGamePC() {
-
-    round = 0;
-    playerOne = make_shared<CPlayerHuman>(hpMax, manaMax, startGold, startAttack);
-    playerTwo = make_shared<CPlayerComputer>(hpMax, manaMax, startGold, startAttack);
-
     playerOne->setEnemy(playerTwo);
     playerTwo->setEnemy(playerOne);
     for (int i = 0; i < 4; i++) {
-
-        bool a = drawCard(playerOne);
-        bool b = drawCard(playerTwo);
-
-        if (!(a || b)) {
-            cout << "ERROR";
-            endGame();
-        }
+       drawCard(playerOne);
+       drawCard(playerTwo);
     }
-
-
-}
-
-
-bool CGame::loadGame() {
-    ifstream setting;
-
-    setting.open("settings.sav");
-
-    if (setting.is_open()) {
-
-        setting >> round;
-        setting.close();
-
-        deck.clear();
-
-        if (!deck.loadCards("cards.sav")) {
-
-            return false;
-        };
-
-        ifstream decksave;
-        decksave.open("deck.sav");
-        if (decksave.is_open()) {
-            string line;
-            while (getline(decksave, line)) {
-                if (!deck.returnCard(stoi(line))) {
-                    decksave.close();
-                    return false;
-                }
-            }
-        } else {
-            decksave.close();
-            return false;
-        }
-
-        ifstream p1, p2;
-        p1.open("playerOne.sav");
-        p2.open("playerTwo.sav");
-        if (p1.is_open() && p2.is_open()) {
-            string line, whoAmI;
-            int hp, mana, gold, attack, cmax;
-            getline(p1, line);
-            whoAmI = line;
-            getline(p1, line);
-            hp = stoi(line);
-            getline(p1, line);
-            mana = stoi(line);
-            getline(p1, line);
-            gold = stoi(line);
-            getline(p1, line);
-            attack = stoi(line);
-            getline(p1, line);
-            cmax = stoi(line);
-
-            if (whoAmI == "HUMAN")
-                playerOne = make_shared<CPlayerHuman>(hp, mana, gold, attack);
-            else if (whoAmI == "PC")
-                playerOne = make_shared<CPlayerComputer>(hp, mana, gold, attack);
-            else {
-                p1.close();
-                p2.close();
-                return false;
-            }
-
-            playerOne->setCardLimit(cmax);
-            while (getline(p1, line)) {
-                if ((size_t) stoi(line) > deck.getDeck().size()) {
-                    p1.close();
-                    p2.close();
-                    return false;
-                }
-                giveCard(playerOne, deck.getDeck()[stoi(line)]);
-            }
-
-
-            getline(p2, line);
-            whoAmI = line;
-            getline(p2, line);
-            hp = stoi(line);
-            getline(p2, line);
-            mana = stoi(line);
-            getline(p2, line);
-            gold = stoi(line);
-            getline(p2, line);
-            attack = stoi(line);
-            getline(p2, line);
-            cmax = stoi(line);
-
-            if (whoAmI == "HUMAN")
-                playerTwo = make_shared<CPlayerHuman>(hp, mana, gold, attack);
-            else if (whoAmI == "PC")
-                playerTwo = make_shared<CPlayerComputer>(hp, mana, gold, attack);
-            else {
-                p1.close();
-                p2.close();
-                return false;
-            }
-
-            playerTwo->setCardLimit(cmax);
-            while (getline(p1, line)) {
-                if ((size_t) stoi(line) > deck.getDeck().size()) {
-                    p1.close();
-                    p2.close();
-                    return false;
-                }
-                giveCard(playerTwo, deck.getDeck()[stoi(line)]);
-            }
-
-
-            playerOne->setEnemy(playerTwo);
-            playerTwo->setEnemy(playerOne);
-        } else {
-            p1.close();
-            p2.close();
-            return false;
-        }
-
-
-    } else {
-
-        return false;
-    }
-    inMenu = false;
-    isRunning = true;
-
-    return true;
 }
 
 void CGame::endGame() {
-
     isRunning = false;
     inMenu = false;
-
-
 }
 
 bool CGame::running() const {
@@ -243,40 +189,27 @@ bool CGame::running() const {
 }
 
 
-void CGame::step() {
-
-
-    if (!(round % 2)) {
-        cout << "Hrac 1: na rade" << endl;
-        playerOne->playing(this);
-    }
+bool CGame::winCheck() {
     if(playerOne->dead()){
-        cout << "\n\n\n\n\n\n HRAC 2 VITEZI ! ! ! ";
-        endGame();
-    }
-    if (!isRunning) return;
+        clear();
+        printw("PLAYER 2 WINS !");
+        getch();
 
-    if (round % 2) {
-        cout << "Hrac 2: na rade" << endl;
-        playerTwo->playing(this);
+        endGame();
     }
     if(playerTwo->dead()){
-        cout << "\n\n\n\n\n\n HRAC 1 VITEZI ! ! ! ";
+        clear();
+        printw("PLAYER 1 WINS !");
+        getch();
+
         endGame();
     }
-    if (!isRunning) return;
-
-    round++;
+    if (!isRunning) return true;
+    else return false;
 }
 
 
-bool CGame::saveGame() {
-    if (!saveCards()) return false;
-    if (!saveSettings()) return false;
-    if (!savePlayers()) return false;
 
-    return true;
-}
 
 bool CGame::giveCard(const shared_ptr<CPlayer> &src, const shared_ptr<CCard> &card) {
     if (!(src->addCard(card))) return false;
@@ -309,34 +242,15 @@ shared_ptr<CCard> CGame::randomCard() {
 }
 
 
-bool CGame::saveCards() {
 
-    if (!deck.saveCardsToFile("cards.sav")) return false;
-    if (!deck.saveDeckToFile("deck.sav")) return false;
-
-    return true;
+void CGame::setStatus(bool mn, bool run) {
+    inMenu = mn;
+    isRunning = run;
 }
 
 
-bool CGame::saveSettings() {
-    ofstream save;
-    save.open("settings.sav");
 
-    if (save.is_open()) {
-        save << round;
-    } else {
-        save.close();
-        return false;
-    }
-
-    save.close();
-    return true;
-}
-
-
-bool CGame::savePlayers() {
-    if (!playerOne->save("playerOne.sav")) return false;
-    if (!playerTwo->save("playerTwo.sav")) return false;
-    return true;
+void CGame::saveGame() const {
+    saveHandler.saveGame(deck, round, playerOne, playerTwo);
 }
 

@@ -5,6 +5,7 @@
 #include"CCard.h"
 #include "SEffect.h"
 
+using namespace std;
 
 /** @brief Class used to store deck and card data.
 
@@ -14,31 +15,79 @@
     @date June 2021
     */
 
-using namespace std;
-
-
-
-
 class CDeck {
 private:
-
-    vector<shared_ptr<CCard>> cardList; ///database of all loaded cards
-    vector<shared_ptr<CCard>> deck;     ///database of loaded cards inside of the deck
+    vector<shared_ptr<CCard>> cardList; /*!< Card's name database of all loaded cards */
+    vector<shared_ptr<CCard>> deck;     /*!< database of loaded cards inside of the deck */
 public:
-    vector<shared_ptr<struct CCard>> &getDeck();  ///getter
     CDeck() = default;
+    //! Returns the most top card and removes it from the deck.
+    /*!
+      \sa CCard
+      \return Returns the most top card and removes it from the deck.
+    */
+    shared_ptr<CCard> drawCard   ();
+    //! Returns random card from the card database
+    /*!
+      \sa CCard
+      \return Returns random card from the card database
+    */
+    shared_ptr<CCard> randomCard ()               const;
+    //! Returns card from carddatabase by index
+    /*!
+      \sa CCard
+      \pram index
+      \return Returns card from carddatabase by index
+    */
+    shared_ptr<CCard> getCardByIndex (int index)  const;
 
-    bool loadCards(const string &filename);       /// Load cards and deck into database
-    bool loadDeck(const string &filename);
-    shared_ptr<CCard> drawCard();                 /// Returns the most top card and removes it from the deck
-    shared_ptr<CCard> randomCard();               /// Returns random card from the card database
+    //! Load cards into database
+    /*!
+      \pram filename
+      \return void
+    */
+    void loadCards (const string &filename);
+    //! Load deck into database
+    /*!
+      \pram filename
+      \return void
+    */
+    void loadDeck  (const string &filename);
 
-    bool saveCardsToFile(const string &filename); /// Saves all cards listed inside of cardList into filename
-    bool saveDeckToFile(const string &filename);  /// Saves card's indexes of all cards inside deck into filename
+    //! Saves all cards listed inside of cardList into filename
+    /*!
+      \pram filename
+      \return void
+    */
+    void saveCardsToFile (const string &filename) const;
+    //! Saves card's indexes of all cards inside deck into filename
+    /*!
+      \pram filename
+      \return void
+    */
+    void saveDeckToFile  (const string &filename) const;
+    //! Adds a card to the deck.
+    /*!
+      \pram src Card
+      \return void
+    */
+    void returnCard (shared_ptr<CCard> &src);
+    //! Adds a card to the deck by the index from card database
+    /*!
+      \pram index
+      \return true if it'S succseful
+    */
+    bool returnCard (int index);
+    //!Removes all records
+    /*!
+      \return void
+    */
+    void clear ();                                 /// Removes all records
+    //! Returns size of cardlist database
+    /*!
+      \return Returns size of cardlist database
+    */
+    int cardListSize () const;
 
 
-
-    void clear();                                 /// Removes all records
-    void returnCard(shared_ptr<CCard> &src);      /// Adds a card to the deck.
-    bool returnCard(int index);                   /// Adds a card to the deck by the index from card database
 };
